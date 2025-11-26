@@ -243,13 +243,19 @@ export default class UpCommand extends BaseCommand {
         const initialRequest = suggestedDescriptors.suggestions[0]?.descriptor || existingDescriptor;
 
         // Call beforeWorkspaceDependencyReplacement hook
-        const modifiedRequest = await configuration.reduceHook(
-          (hooks: Hooks) => hooks.beforeWorkspaceDependencyReplacement,
-          initialRequest,
-          workspace,
-          target,
-          existingDescriptor,
-        );
+        let modifiedRequest: Descriptor = initialRequest;
+        for (const plugin of configuration.plugins.values()) {
+          const hooks = plugin.hooks as Hooks;
+          if (!hooks?.beforeWorkspaceDependencyReplacement)
+            continue;
+
+          modifiedRequest = await hooks.beforeWorkspaceDependencyReplacement(
+            workspace,
+            target,
+            existingDescriptor,
+            modifiedRequest,
+          );
+        }
 
         // If modified, regenerate suggestions
         if (modifiedRequest.descriptorHash !== initialRequest.descriptorHash) {

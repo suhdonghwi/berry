@@ -93,15 +93,15 @@ export interface Hooks {
    * manually adding the dependencies into the manifest and running
    * `yarn install` won't trigger it.
    *
-   * @param descriptor - The descriptor being added (can be modified and returned)
    * @param workspace - The workspace where the dependency will be added
    * @param target - The dependency type (dependencies, devDependencies, peerDependencies)
+   * @param descriptor - The descriptor being added (can be modified and returned)
    * @returns The descriptor to use (can be the same or modified)
    */
   beforeWorkspaceDependencyAddition?: (
-    descriptor: Descriptor,
     workspace: Workspace,
     target: suggestUtils.Target,
+    descriptor: Descriptor,
   ) => Promise<Descriptor>;
 
   /**
@@ -126,17 +126,17 @@ export interface Hooks {
    * `yarn up` - manually updating the dependencies from the manifest and
    * running `yarn install` won't trigger it.
    *
-   * @param descriptor - The new descriptor being used for replacement (can be modified and returned)
    * @param workspace - The workspace where the dependency will be replaced
    * @param target - The dependency type (dependencies, devDependencies, peerDependencies)
    * @param existingDescriptor - The current descriptor in the manifest
+   * @param descriptor - The new descriptor being used for replacement (can be modified and returned)
    * @returns The descriptor to use for the replacement (can be the same or modified)
    */
   beforeWorkspaceDependencyReplacement?: (
-    descriptor: Descriptor,
     workspace: Workspace,
     target: suggestUtils.Target,
     existingDescriptor: Descriptor,
+    descriptor: Descriptor,
   ) => Promise<Descriptor>;
 
   /**

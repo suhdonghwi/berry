@@ -207,24 +207,34 @@ export default class AddCommand extends BaseCommand {
       // Determine if this is addition or replacement
       const existingDescriptor = workspace.manifest[target].get(request.identHash);
 
-      let modifiedRequest: Descriptor;
+      let modifiedRequest: Descriptor = request;
       if (typeof existingDescriptor === `undefined`) {
         // ADDITION: Call beforeWorkspaceDependencyAddition
-        modifiedRequest = await configuration.reduceHook(
-          (hooks: Hooks) => hooks.beforeWorkspaceDependencyAddition,
-          request,
-          workspace,
-          target,
-        );
+        for (const plugin of configuration.plugins.values()) {
+          const hooks = plugin.hooks as Hooks;
+          if (!hooks?.beforeWorkspaceDependencyAddition)
+            continue;
+
+          modifiedRequest = await hooks.beforeWorkspaceDependencyAddition(
+            workspace,
+            target,
+            modifiedRequest,
+          );
+        }
       } else {
         // REPLACEMENT: Call beforeWorkspaceDependencyReplacement
-        modifiedRequest = await configuration.reduceHook(
-          (hooks: Hooks) => hooks.beforeWorkspaceDependencyReplacement,
-          request,
-          workspace,
-          target,
-          existingDescriptor,
-        );
+        for (const plugin of configuration.plugins.values()) {
+          const hooks = plugin.hooks as Hooks;
+          if (!hooks?.beforeWorkspaceDependencyReplacement)
+            continue;
+
+          modifiedRequest = await hooks.beforeWorkspaceDependencyReplacement(
+            workspace,
+            target,
+            existingDescriptor,
+            modifiedRequest,
+          );
+        }
       }
 
       // If modified, regenerate suggestions

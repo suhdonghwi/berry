@@ -128,15 +128,15 @@ export interface Hooks {
    *
    * @param workspace - The workspace where the dependency will be replaced
    * @param target - The dependency type (dependencies, devDependencies, peerDependencies)
-   * @param existingDescriptor - The current descriptor in the manifest
-   * @param descriptor - The new descriptor being used for replacement (can be modified and returned)
+   * @param fromDescriptor - The current descriptor in the manifest
+   * @param toDescriptor - The new descriptor being used for replacement (can be modified and returned)
    * @returns The descriptor to use for the replacement (can be the same or modified)
    */
   beforeWorkspaceDependencyReplacement?: (
     workspace: Workspace,
     target: suggestUtils.Target,
-    existingDescriptor: Descriptor,
-    descriptor: Descriptor,
+    fromDescriptor: Descriptor,
+    toDescriptor: Descriptor,
   ) => Promise<Descriptor>;
 
   /**

@@ -231,8 +231,8 @@ export default class AddCommand extends BaseCommand {
           modifiedRequest = await hooks.beforeWorkspaceDependencyReplacement(
             workspace,
             target,
-            existingDescriptor,
-            modifiedRequest,
+            existingDescriptor, // fromDescriptor
+            modifiedRequest,    // toDescriptor
           );
         }
       }

@@ -234,7 +234,41 @@ export default class UpCommand extends BaseCommand {
     if (unreferencedPatterns.length > 0)
       throw new UsageError(`Pattern ${formatUtils.prettyList(configuration, unreferencedPatterns, formatUtils.Type.CODE)} doesn't match any packages referenced by any workspace`);
 
-    const allSuggestions = await Promise.all(allSuggestionsPromises);
+    const allSuggestionsRaw = await Promise.all(allSuggestionsPromises);
+
+    // Process through beforeWorkspaceDependencyReplacement hook
+    const allSuggestions = await Promise.all(
+      allSuggestionsRaw.map(async ([workspace, target, existingDescriptor, suggestedDescriptors]) => {
+        // Get the initial request (first suggestion or existing)
+        const initialRequest = suggestedDescriptors.suggestions[0]?.descriptor || existingDescriptor;
+
+        // Call beforeWorkspaceDependencyReplacement hook
+        const modifiedRequest = await configuration.reduceHook(
+          (hooks: Hooks) => hooks.beforeWorkspaceDependencyReplacement,
+          initialRequest,
+          workspace,
+          target,
+          existingDescriptor,
+          initialRequest,
+        );
+
+        // If modified, regenerate suggestions
+        if (modifiedRequest.descriptorHash !== initialRequest.descriptorHash) {
+          const newSuggestions = await suggestUtils.getSuggestedDescriptors(modifiedRequest, {
+            project,
+            workspace,
+            cache,
+            target,
+            fixed,
+            modifier,
+            strategies,
+          });
+          return [workspace, target, existingDescriptor, newSuggestions] as const;
+        }
+
+        return [workspace, target, existingDescriptor, suggestedDescriptors] as const;
+      })
+    );
 
     const checkReport = await LightReport.start({
       configuration,

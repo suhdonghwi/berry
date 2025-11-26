@@ -84,6 +84,27 @@ export {suggestUtils};
 
 export interface Hooks {
   /**
+   * Called before a new dependency is added to a workspace, before any user
+   * prompts or suggestion generation. Plugins can validate the request and
+   * throw errors to block the operation, or return a modified descriptor to
+   * change what will be added.
+   *
+   * Note that this hook is only called by the CLI commands like `yarn add` -
+   * manually adding the dependencies into the manifest and running
+   * `yarn install` won't trigger it.
+   *
+   * @param workspace - The workspace where the dependency will be added
+   * @param target - The dependency type (dependencies, devDependencies, peerDependencies)
+   * @param request - The initial descriptor parsed from user input
+   * @returns The descriptor to use (can be the same or modified)
+   */
+  beforeWorkspaceDependencyAddition?: (
+    workspace: Workspace,
+    target: suggestUtils.Target,
+    request: Descriptor,
+  ) => Promise<Descriptor>;
+
+  /**
    * Called when a new dependency is added to a workspace. Note that this hook
    * is only called by the CLI commands like `yarn add` - manually adding the
    * dependencies into the manifest and running `yarn install` won't trigger
@@ -97,6 +118,28 @@ export interface Hooks {
   ) => Promise<void>;
 
   /**
+   * Called before a dependency range is replaced in a workspace, before any
+   * user prompts or suggestion generation. Plugins can validate the request
+   * and throw errors to block the operation, or return a modified descriptor.
+   *
+   * Note that this hook is only called by the CLI commands like `yarn add` or
+   * `yarn up` - manually updating the dependencies from the manifest and
+   * running `yarn install` won't trigger it.
+   *
+   * @param workspace - The workspace where the dependency will be replaced
+   * @param target - The dependency type (dependencies, devDependencies, peerDependencies)
+   * @param existingDescriptor - The current descriptor in the manifest
+   * @param request - The new descriptor requested by the user
+   * @returns The descriptor to use for the replacement (can be the same or modified)
+   */
+  beforeWorkspaceDependencyReplacement?: (
+    workspace: Workspace,
+    target: suggestUtils.Target,
+    existingDescriptor: Descriptor,
+    request: Descriptor,
+  ) => Promise<Descriptor>;
+
+  /**
    * Called when a dependency range is replaced inside a workspace. Note that
    * this hook is only called by the CLI commands like `yarn add` - manually
    * updating the dependencies from the manifest and running `yarn install`
@@ -107,6 +150,25 @@ export interface Hooks {
     target: suggestUtils.Target,
     fromDescriptor: Descriptor,
     toDescriptor: Descriptor,
+  ) => Promise<void>;
+
+  /**
+   * Called before a dependency is removed from a workspace, before any
+   * processing occurs. Plugins can validate and throw errors to block the
+   * removal.
+   *
+   * Note that this hook is only called by the CLI commands like `yarn remove` -
+   * manually removing the dependencies from the manifest and running
+   * `yarn install` won't trigger it.
+   *
+   * @param workspace - The workspace where the dependency will be removed
+   * @param target - The dependency type (dependencies, devDependencies, peerDependencies)
+   * @param descriptor - The descriptor being removed
+   */
+  beforeWorkspaceDependencyRemoval?: (
+    workspace: Workspace,
+    target: suggestUtils.Target,
+    descriptor: Descriptor,
   ) => Promise<void>;
 
   /**

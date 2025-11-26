@@ -201,6 +201,58 @@ export default class AddCommand extends BaseCommand {
       return results;
     })).then(results => results.flat());
 
+    // Process through before hooks
+    const processedSuggestions = [];
+    for (const {request, suggestedDescriptors, target} of allSuggestions) {
+      // Determine if this is addition or replacement
+      const existingDescriptor = workspace.manifest[target].get(request.identHash);
+
+      let modifiedRequest: Descriptor;
+      if (typeof existingDescriptor === 'undefined') {
+        // ADDITION: Call beforeWorkspaceDependencyAddition
+        modifiedRequest = await configuration.reduceHook(
+          (hooks: Hooks) => hooks.beforeWorkspaceDependencyAddition,
+          request,
+          workspace,
+          target,
+          request,
+        );
+      } else {
+        // REPLACEMENT: Call beforeWorkspaceDependencyReplacement
+        modifiedRequest = await configuration.reduceHook(
+          (hooks: Hooks) => hooks.beforeWorkspaceDependencyReplacement,
+          request,
+          workspace,
+          target,
+          existingDescriptor,
+          request,
+        );
+      }
+
+      // If modified, regenerate suggestions
+      if (modifiedRequest.descriptorHash !== request.descriptorHash) {
+        const newSuggestions = await suggestUtils.getSuggestedDescriptors(modifiedRequest, {
+          project,
+          workspace,
+          cache,
+          fixed,
+          target,
+          modifier,
+          strategies,
+          maxResults,
+        });
+        processedSuggestions.push({
+          request: modifiedRequest,
+          suggestedDescriptors: newSuggestions,
+          target,
+        });
+      } else {
+        processedSuggestions.push({request, suggestedDescriptors, target});
+      }
+    }
+
+    const allSuggestions = processedSuggestions;
+
     const checkReport = await LightReport.start({
       configuration,
       stdout: this.context.stdout,

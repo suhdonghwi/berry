@@ -172,7 +172,7 @@ export default class AddCommand extends BaseCommand {
       return structUtils.makeDescriptor(descriptor, `jsr:${descriptor.range}`);
     };
 
-    const allSuggestions = await Promise.all(this.packages.map(async pseudoDescriptor => {
+    let allSuggestions = await Promise.all(this.packages.map(async pseudoDescriptor => {
       const request = pseudoDescriptor.match(/^\.{0,2}\//)
         ? await suggestUtils.extractDescriptorFromPath(pseudoDescriptor as PortablePath, {cwd: this.context.cwd, workspace})
         : pseudoDescriptor.startsWith(`jsr:`)
@@ -208,14 +208,13 @@ export default class AddCommand extends BaseCommand {
       const existingDescriptor = workspace.manifest[target].get(request.identHash);
 
       let modifiedRequest: Descriptor;
-      if (typeof existingDescriptor === 'undefined') {
+      if (typeof existingDescriptor === `undefined`) {
         // ADDITION: Call beforeWorkspaceDependencyAddition
         modifiedRequest = await configuration.reduceHook(
           (hooks: Hooks) => hooks.beforeWorkspaceDependencyAddition,
           request,
           workspace,
           target,
-          request,
         );
       } else {
         // REPLACEMENT: Call beforeWorkspaceDependencyReplacement
@@ -225,7 +224,6 @@ export default class AddCommand extends BaseCommand {
           workspace,
           target,
           existingDescriptor,
-          request,
         );
       }
 
@@ -251,7 +249,7 @@ export default class AddCommand extends BaseCommand {
       }
     }
 
-    const allSuggestions = processedSuggestions;
+    allSuggestions = processedSuggestions;
 
     const checkReport = await LightReport.start({
       configuration,

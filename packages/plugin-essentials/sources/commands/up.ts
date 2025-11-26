@@ -249,7 +249,6 @@ export default class UpCommand extends BaseCommand {
           workspace,
           target,
           existingDescriptor,
-          initialRequest,
         );
 
         // If modified, regenerate suggestions
@@ -267,7 +266,7 @@ export default class UpCommand extends BaseCommand {
         }
 
         return [workspace, target, existingDescriptor, suggestedDescriptors] as const;
-      })
+      }),
     );
 
     const checkReport = await LightReport.start({
